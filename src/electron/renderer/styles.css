@@ -4003,6 +4003,56 @@ html.is-windows .limit-live-badge {
 .limit-window-note {
   gap: 3px;
 }
+.limit-forecast {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(var(--line-rgb), 0.5);
+  margin-top: 2px;
+  font-size: 9px;
+}
+.limit-forecast-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+.limit-forecast-label {
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.limit-forecast-value {
+  color: var(--text);
+  white-space: nowrap;
+}
+.limit-forecast-badge {
+  align-self: flex-start;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.limit-forecast-badge-warning {
+  color: #5c4308;
+  background: #f5a623;
+}
+.limit-forecast-badge-critical {
+  color: #ffffff;
+  background: #e5484d;
+}
+.limit-forecast-warning {
+  color: var(--warning, #d97706);
+  white-space: normal;
+}
+.limit-forecast-warning,
+.limit-forecast-badge-critical,
+.limit-forecast-badge-warning {
+  font-weight: 600;
+}
 .limit-spend-line {
   min-width: 0;
 }

@@ -23,7 +23,6 @@
 const {
   aggregateQuotaRisk,
   calculateQuotaForecasts,
-  dedupeSnapshots,
   extractQuotaSnapshots,
   forecastStaleAfterMs,
   sameObservation,
@@ -149,14 +148,18 @@ function createQuotaForecastController(options = {}) {
     if (fresh.length > 0) {
       history = history.concat(fresh);
       if (store && typeof store.prune === 'function') history = store.prune(history);
+      // Recompute synchronously so the tray and renderer see the new risk on
+      // this same stats push; persistence is fire-and-forget.
+      recompute();
       if (store) await store.write(history).catch(() => false);
+      return;
     }
     recompute();
   }
 
   // Recompute forecasts and the global risk from the in-memory history.
   function recompute() {
-    let forecasts = [];
+    let forecasts;
     try {
       forecasts = calculateQuotaForecasts(history, {
         nowMs: nowMs(),

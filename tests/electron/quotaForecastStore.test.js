@@ -3,7 +3,6 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fsSync = require('node:fs');
-const fsPromises = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 

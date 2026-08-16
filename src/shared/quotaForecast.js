@@ -56,10 +56,6 @@ function parseIsoMs(value) {
   return Number.isFinite(ms) ? ms : null;
 }
 
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
 // OLS slope of y over x. Returns null when there are fewer than two points or
 // the x variance is zero (all samples share one timestamp).
 function olsSlope(points) {
@@ -259,7 +255,7 @@ function secondaryRateFor(windowKind, samples, nowMs, options = {}) {
   return null;
 }
 
-function confidenceFor(windowKind, primary, secondary) {
+function confidenceFor(windowKind, primary, _secondary) {
   if (!primary) return 'insufficient';
   const spanMs = primary.sampleSpanMs;
   const count = primary.sampleCount;
@@ -292,7 +288,6 @@ function evaluateRisk({
 }) {
   const resetsAtMs = parseIsoMs(latest.resetsAt);
   const timeToResetMs = resetsAtMs - nowMs;
-  const observedAtMs = parseIsoMs(latest.observedAt);
 
   // Direct critical (§15.4): burn rate may not be stable yet, but the quota is
   // nearly gone and the reset is far enough away that nothing will save it.

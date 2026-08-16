@@ -168,6 +168,9 @@ const {
   readMacWidgetHistoryCache,
   writeMacWidgetHistoryCache
 } = require('./macWidgetHistoryStore');
+const { createQuotaForecastController } = require('./quotaForecastController');
+const { createQuotaForecastStore, quotaForecastHistoryPath } = require('./quotaForecastStore');
+const { forecastTooltipLine } = require('../shared/forecastPresentation');
 const { parseMacWidgetDeepLink } = require('./macWidgetDeepLink');
 const { createMacWidgetLaunchServicesRecovery } = require('./macWidgetLaunchServicesRecovery');
 const { projectLimitStatsForDisplay } = require('./limitStatsPresentation');
@@ -418,6 +421,11 @@ function defaultSettings() {
     claudePrepaidBalanceEnabled: parseBoolean(process.env.TOKEN_MONITOR_CLAUDE_PREPAID_BALANCE, true),
     opencodeLocalLimitsEnabled: false,
     showLimitUsed: parseBoolean(process.env.TOKEN_MONITOR_SHOW_LIMIT_USED, false),
+    // Predictive quota alerts (fork feature): forecast burn rate, ETA and tray
+    // risk indicator. Env toggles keep headless/CI setups able to opt out.
+    predictiveQuotaAlertsEnabled: parseBoolean(process.env.TOKEN_MONITOR_PREDICTIVE_QUOTA_ALERTS, true),
+    predictiveQuotaCriticalEtaMinutes: 60,
+    predictiveQuotaTrayIndicator: parseBoolean(process.env.TOKEN_MONITOR_PREDICTIVE_QUOTA_TRAY_INDICATOR, true),
     // Manual subscription metadata. Plain preferences, not credentials, so they
     // live in settings.json and cross to the renderer unredacted.
     subscriptions: [],
@@ -2359,6 +2367,34 @@ let latestHubStatsIdentity = null;
 let hubModeGeneration = 0;
 let tray = null;
 let latestStats = null;
+let quotaForecastController = null;
+
+function startQuotaForecast() {
+  if (quotaForecastController) return;
+  try {
+    const store = createQuotaForecastStore({
+      historyPath: quotaForecastHistoryPath(app.getPath('userData')),
+      logger: (message) => console.warn(message)
+    });
+    quotaForecastController = createQuotaForecastController({
+      store,
+      getSettings: () => settings,
+      logger: (message) => console.warn(message)
+    });
+    void quotaForecastController.start();
+  } catch (error) {
+    // Fail-open (§5.2): a forecast subsystem failure never blocks the widget.
+    console.warn(`[quota-forecast] start failed: ${error.message}`);
+    quotaForecastController = null;
+  }
+}
+
+function stopQuotaForecast() {
+  if (quotaForecastController) {
+    try { quotaForecastController.stop(); } catch (_) {}
+    quotaForecastController = null;
+  }
+}
 let macWidgetSnapshotController = null;
 let macWidgetDemand = null;
 let macWidgetPublicationReady = false;
@@ -3633,9 +3669,20 @@ function sendPush(payload, options = {}) {
     injectLocalDeviceStatus(payload.data.stats);
     latestStats = payload.data.stats;
     const visibleStats = electronPresentationStats(latestStats);
+    // Forecast consumer: observe the same authoritative limits the renderer
+    // sees; never polls, never changes the refresh cadence (§5.1).
+    if (quotaForecastController) {
+      void quotaForecastController.update(latestStats).catch((error) => {
+        console.warn(`[quota-forecast] update failed: ${error.message}`);
+      });
+    }
     rendererPayload = {
       ...payload,
-      data: { ...payload.data, stats: visibleStats }
+      data: {
+        ...payload.data,
+        stats: visibleStats,
+        quotaForecast: quotaForecastController?.getState() || null
+      }
     };
     scheduleMacWidgetSnapshot(visibleStats, options.widgetProducerOwner);
     syncTrayCodexActiveAccount();
@@ -3721,6 +3768,31 @@ function updateDiscordRpcDisplay(stats) {
   updateDiscordRpc(stats, settings?.currency, compactTokenDisplayOptions());
 }
 
+// The forecast overlay is orthogonal to the chosen tray content mode (§18.2):
+// it only colors the icon and annotates the tooltip. Both are controlled by
+// the predictive-alert settings.
+function forecastRiskState() {
+  if (settings?.predictiveQuotaAlertsEnabled === false || settings?.predictiveQuotaTrayIndicator === false) return null;
+  const globalRisk = quotaForecastController?.getState()?.globalRisk;
+  return globalRisk || null;
+}
+
+function forecastTooltip() {
+  const globalRisk = forecastRiskState();
+  if (!globalRisk || (globalRisk.risk !== 'warning' && globalRisk.risk !== 'critical')) return null;
+  const locale = trayMenuLocale();
+  return forecastTooltipLine(globalRisk, {
+    labels: {
+      criticalHead: translate(locale, 'limits.forecast.tooltipCritical'),
+      warningHead: translate(locale, 'limits.forecast.tooltipWarning'),
+      remaining: translate(locale, 'limits.forecast.tooltipRemaining'),
+      eta: translate(locale, 'limits.forecast.tooltipEta'),
+      resetIn: translate(locale, 'limits.forecast.tooltipResetIn'),
+      beforeReset: (duration) => translate(locale, 'limits.forecast.tooltipBeforeReset', { duration })
+    }
+  });
+}
+
 function updateTrayDisplay() {
   if (!tray || tray.isDestroyed()) return;
   const visibleStats = electronPresentationStats(latestStats);
@@ -3743,7 +3815,8 @@ function updateTrayDisplay() {
   if (trayShowsTitle(process.platform)) tray.setTitle(text);
   // Tooltip always shows a useful summary, even in icon-only mode where setTitle is blank.
   const tip = formatTrayText(visibleStats, 'both', currency, compactOptions);
-  tray.setToolTip(`Token Monitor - ${tip}`);
+  const forecastLine = forecastTooltip();
+  tray.setToolTip(forecastLine ? `Token Monitor - ${forecastLine}` : `Token Monitor - ${tip}`);
   // Icon: rendered bars image in bar modes, otherwise the app icon.
   let icon = null;
   if (barsImageMode || trayImageMode || customImageMode) {
@@ -3752,6 +3825,12 @@ function updateTrayDisplay() {
     const usageIconId = pickUsageTrayIconId(visibleStats, mode, Object.keys(providerTrayIcons));
     if (usageIconId) icon = providerTrayIcons[usageIconId];
   }
+  // Forecast risk overlay: a colored badge replaces the icon while the risk is
+  // active (SAFE keeps the existing icon, §18.1). The renderer generates the
+  // badged variants; until they arrive the existing icon stays.
+  const risk = forecastRiskState()?.risk;
+  const riskIconId = risk === 'warning' || risk === 'critical' ? `risk-${risk}` : null;
+  if (riskIconId && providerTrayIcons[riskIconId]) icon = providerTrayIcons[riskIconId];
   tray.setImage(icon || getDefaultTrayIcon());
 }
 
@@ -4086,6 +4165,14 @@ function redactThirdPartyProfilesForRenderer(profiles) {
     };
   }
   return out;
+}
+
+// Predictive alert horizon: a positive integer of minutes, clamped to a sane
+// range (5 min .. 7 days) so a typo cannot disable the alert.
+function normalizePredictiveQuotaCriticalEtaMinutes(value) {
+  const minutes = Number(value);
+  if (!Number.isFinite(minutes)) return 60;
+  return Math.max(5, Math.min(7 * 24 * 60, Math.round(minutes)));
 }
 
 function settingsForRenderer() {
@@ -5654,6 +5741,7 @@ function rebuildWindow() {
 app.whenReady().then(() => {
   if (process.platform === 'darwin' && app.dock) app.dock.setIcon(APP_ICON_PATH);
   ensureSettingsLoaded();
+  startQuotaForecast();
   const widgetRuntime = macWidgetRuntimeSupport({
     platform: process.platform,
     osRelease: process.platform === 'darwin' ? os.release() : ''
@@ -5888,6 +5976,9 @@ app.whenReady().then(() => {
       claudePrepaidBalanceEnabled: parseBoolean(patch.claudePrepaidBalanceEnabled ?? settings.claudePrepaidBalanceEnabled, true),
       opencodeLocalLimitsEnabled: parseBoolean(patch.opencodeLocalLimitsEnabled ?? settings.opencodeLocalLimitsEnabled, false),
       showLimitUsed: parseBoolean(patch.showLimitUsed ?? settings.showLimitUsed, false),
+      predictiveQuotaAlertsEnabled: parseBoolean(patch.predictiveQuotaAlertsEnabled ?? settings.predictiveQuotaAlertsEnabled, true),
+      predictiveQuotaCriticalEtaMinutes: normalizePredictiveQuotaCriticalEtaMinutes(patch.predictiveQuotaCriticalEtaMinutes ?? settings.predictiveQuotaCriticalEtaMinutes),
+      predictiveQuotaTrayIndicator: parseBoolean(patch.predictiveQuotaTrayIndicator ?? settings.predictiveQuotaTrayIndicator, true),
       windowMaximized: parseBoolean(settings.windowMaximized, false),
       zoomFactor: clampZoom(patch.zoomFactor ?? settings.zoomFactor),
       ...normalizeTrayModeSettings({
@@ -6141,6 +6232,7 @@ app.whenReady().then(() => {
     maybeAdoptSharedSubscriptionRevision(stats);
     return electronPresentationStats(stats);
   });
+  ipcMain.handle('quotaForecast:get', () => quotaForecastController?.getState() || null);
   ipcMain.handle('export:now', async () => {
     const result = await dialog.showOpenDialog({
       properties: ['openDirectory', 'createDirectory'],
@@ -6992,6 +7084,7 @@ app.on('before-quit', () => {
   if (rateRefreshTimer) clearInterval(rateRefreshTimer);
   if (appUpdateBackgroundTimer) clearInterval(appUpdateBackgroundTimer);
   unregisterWindowToggleShortcut();
+  stopQuotaForecast();
   if (skipForcedQuit) return;
   performQuit();
 });
