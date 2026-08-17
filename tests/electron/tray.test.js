@@ -1085,3 +1085,25 @@ test('every tray helper main.js destructures is actually exported', () => {
   const missing = names.filter((name) => typeof trayModule[name] === 'undefined');
   assert.deepEqual(missing, []);
 });
+
+test('risk tray icons never become macOS template images', () => {
+  assert.equal(shouldUseTemplateTrayIcon('risk-warning', 'darwin', false), false);
+  assert.equal(shouldUseTemplateTrayIcon('risk-critical', 'darwin', true), false);
+  assert.equal(shouldUseTemplateTrayIcon('risk-critical', 'win32'), false);
+  assert.equal(shouldUseTemplateTrayIcon('risk-warning', 'linux'), false);
+  // Other ids keep their existing template behavior.
+  assert.equal(shouldUseTemplateTrayIcon('codex', 'darwin', false), true);
+  assert.equal(shouldUseTemplateTrayIcon('codex', 'darwin', true), false);
+  assert.equal(shouldUseTemplateTrayIcon('bars', 'darwin', false), true);
+});
+
+test('the tray forecast overlay swaps in a badged icon and annotates the tooltip', () => {
+  const source = fs.readFileSync(path.join(__dirname, '../../src/electron/main.js'), 'utf8');
+  // Orthogonal overlay (§18.2): the risk badge replaces the icon while the
+  // warning/critical state is active; the existing content modes are untouched.
+  assert.match(source, /function forecastRiskState\(\)/);
+  assert.match(source, /predictiveQuotaAlertsEnabled === false \|\| settings\?\.predictiveQuotaTrayIndicator === false/);
+  assert.match(source, /const riskIconId = risk === 'warning' \|\| risk === 'critical' \? `risk-\$\{risk\}` : null;/);
+  assert.match(source, /if \(riskIconId && providerTrayIcons\[riskIconId\]\) icon = providerTrayIcons\[riskIconId\];/);
+  assert.match(source, /tray\.setToolTip\(forecastLine \? `Token Monitor - \$\{forecastLine\}` : `Token Monitor - \$\{tip\}`\)/);
+});

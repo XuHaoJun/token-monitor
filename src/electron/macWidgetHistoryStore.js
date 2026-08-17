@@ -276,5 +276,6 @@ module.exports = {
   macWidgetHistoryCachePath,
   projectMacWidgetHistory,
   readMacWidgetHistoryCache,
-  writeMacWidgetHistoryCache
+  writeMacWidgetHistoryCache,
+  writePrivateBufferAtomic
 };

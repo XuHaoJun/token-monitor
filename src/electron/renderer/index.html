@@ -605,6 +605,10 @@
                 <label class="inline-option"><input type="radio" name="showLimitUsed" value="used" id="showLimitUsedUsed" /><span data-i18n="settings.limits.barsUsed">Used</span></label>
               </div>
             </div>
+            <div class="settings-separator"></div>
+            <label class="checkbox-label settings-item"><span class="settings-item-text"><span class="settings-item-title" data-i18n="settings.limits.predictiveAlerts">Predictive quota alerts</span></span><input id="predictiveQuotaAlertsInput" type="checkbox" /></label>
+            <label class="checkbox-label settings-item"><span class="settings-item-text"><span class="settings-item-title" data-i18n="settings.limits.predictiveTrayIndicator">Change tray indicator when quota is at risk</span></span><input id="predictiveQuotaTrayIndicatorInput" type="checkbox" /></label>
+            <label class="settings-item"><span class="settings-item-text"><span class="settings-item-title" data-i18n="settings.limits.predictiveCriticalEta">Critical when estimated empty within</span></span><input id="predictiveQuotaCriticalEtaInput" type="number" min="5" max="10080" step="5" /></label>
           </div>
         </div>
 
@@ -1550,6 +1554,7 @@
       <span id="floatingBubbleContent" aria-hidden="true">Σ</span>
     </button>
     <script src="../../shared/limitBalanceDisplay.js"></script>
+    <script src="../../shared/forecastPresentation.js"></script>
     <script src="trayBars.js"></script>
     <script src="usageCharts.js"></script>
     <script src="homeOverview.js"></script>

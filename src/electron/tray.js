@@ -111,6 +111,9 @@ function pickUsageTrayIconId(stats, contentMode = 'tokens', availableIconIds = [
 }
 
 function shouldUseTemplateTrayIcon(id, platform = process.platform, showProviderBadge = false) {
+  // Risk icons carry an explicit yellow/red badge: on macOS they must stay
+  // non-template or the system tint would erase the badge (§19.1).
+  if (String(id).startsWith('risk-')) return false;
   return platform === 'darwin' && (isGeneratedTrayIconMode(id) || !showProviderBadge);
 }
 

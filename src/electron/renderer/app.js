@@ -160,6 +160,7 @@ const TRAY_ICON_PROVIDERS = [
   ));
 const DEFAULT_LIMIT_PROVIDER_ORDER = LIMIT_PROVIDERS.map((provider) => provider.id).join(',');
 const limitProviderOrderApi = window.TokenMonitorLimitProviderOrder;
+const forecastPresentationApi = window.TokenMonitorForecastPresentation;
 const limitProviderPresentationApi = window.TokenMonitorLimitProviderPresentation;
 const appUpdatePresentationApi = window.TokenMonitorAppUpdatePresentation;
 const accountIdentityApi = window.TokenMonitorAccountIdentity;
@@ -346,7 +347,7 @@ let viewSwitcherLongPressTimer = null;
 let viewSwitcherLongPressTriggered = false;
 let viewSwitcherHoverCloseTimer = null;
 const els = {
-  shell: document.querySelector('.shell'), status: document.getElementById('status'), liveDot: document.getElementById('liveDot'), tokenRateReveal: document.getElementById('tokenRateReveal'), totalTokens: document.getElementById('totalTokens'), totalTokensCompact: document.getElementById('totalTokensCompact'), cost: document.getElementById('cost'), homePanel: document.getElementById('homePanel'), breakdown: document.getElementById('breakdown'), serviceStatusPanel: document.getElementById('serviceStatusPanel'), limitsPanel: document.getElementById('limitsPanel'), trendsPanel: document.getElementById('trendsPanel'), viewSwitcher: document.getElementById('viewSwitcher'), pinButton: document.getElementById('pinButton'), utilityActions: document.getElementById('utilityActions'), settingsButton: document.getElementById('settingsButton'), settingsPanel: document.getElementById('settingsPanel'), languageInput: document.getElementById('languageInput'), currencyInput: document.getElementById('currencyInput'), currencyRateRow: document.getElementById('currencyRateRow'), currencyRateModeAuto: document.getElementById('currencyRateModeAuto'), currencyRateModeManual: document.getElementById('currencyRateModeManual'), currencyRateManualField: document.getElementById('currencyRateManualField'), currencyRateOverrideInput: document.getElementById('currencyRateOverrideInput'), currencyRateStatus: document.getElementById('currencyRateStatus'), hubUrlInput: document.getElementById('hubUrlInput'), secretInput: document.getElementById('secretInput'), deviceIdInput: document.getElementById('deviceIdInput'), limitProviderCheckboxes: document.getElementById('limitProviderCheckboxes'), limitsRefreshInput: document.getElementById('limitsRefreshInput'), limitsRefreshAdaptiveNote: document.getElementById('limitsRefreshAdaptiveNote'), showLimitSourceInput: document.getElementById('showLimitSourceInput'), maskLimitAccountEmailsInput: document.getElementById('maskLimitAccountEmailsInput'), showLimitUsedInputs: Array.from(document.querySelectorAll('input[name="showLimitUsed"]')), liveDotInput: document.getElementById('liveDotInput'), toolIconsInput: document.getElementById('toolIconsInput'), floatingBubbleInput: document.getElementById('floatingBubbleInput'), floatingBubbleTriggerInputs: Array.from(document.querySelectorAll('input[name="floatingBubbleTrigger"]')), floatingBubbleTriggerRow: document.getElementById('floatingBubbleTriggerRow'), floatingBubbleContentInput: document.getElementById('floatingBubbleContentInput'), floatingBubbleContentRow: document.getElementById('floatingBubbleContentRow'), floatingBubbleComposer: document.getElementById('floatingBubbleComposer'), floatingBubbleContent: document.getElementById('floatingBubbleContent'), discordRpcInput: document.getElementById('discordRpcInput'), windowBehaviorInput: document.getElementById('windowBehaviorInput'), showTrayIconInput: document.getElementById('showTrayIconInput'), showTrayProviderBadgeInput: document.getElementById('showTrayProviderBadgeInput'), trayModeInput: document.getElementById('trayModeInput'), trayContentInput: document.getElementById('trayContentInput'), trayComposer: document.getElementById('trayComposer'), windowToggleShortcutValue: document.getElementById('windowToggleShortcutValue'), windowToggleShortcutClearButton: document.getElementById('windowToggleShortcutClearButton'), windowToggleShortcutNote: document.getElementById('windowToggleShortcutNote'), glassInput: document.getElementById('glassInput'), blurInput: document.getElementById('blurInput'), zoomInput: document.getElementById('zoomInput'), resetGlassButton: document.getElementById('resetGlassButton'), resetDepthButton: document.getElementById('resetDepthButton'), resetZoomButton: document.getElementById('resetZoomButton'), saveSettingsButton: document.getElementById('saveSettingsButton'), clientDisplayList: document.getElementById('clientDisplayList'), wslScanInput: document.getElementById('wslScanInput'), wslScanRow: document.getElementById('wslScanRow'), wslPanel: document.getElementById('wslPanel'), openConfigButton: document.getElementById('openConfigButton'), exportAutoInput: document.getElementById('exportAutoInput'), exportAutoDetails: document.getElementById('exportAutoDetails'), exportAutoStatus: document.getElementById('exportAutoStatus'), exportDirLabel: document.getElementById('exportDirLabel'), exportPickDirButton: document.getElementById('exportPickDirButton'), exportIntervalInput: document.getElementById('exportIntervalInput'), exportNowButton: document.getElementById('exportNowButton'), refreshButton: document.getElementById('refreshButton'), minButton: document.getElementById('minButton'), closeButton: document.getElementById('closeButton'), floatingBubbleTab: document.getElementById('floatingBubbleTab'),
+  shell: document.querySelector('.shell'), status: document.getElementById('status'), liveDot: document.getElementById('liveDot'), tokenRateReveal: document.getElementById('tokenRateReveal'), totalTokens: document.getElementById('totalTokens'), totalTokensCompact: document.getElementById('totalTokensCompact'), cost: document.getElementById('cost'), homePanel: document.getElementById('homePanel'), breakdown: document.getElementById('breakdown'), serviceStatusPanel: document.getElementById('serviceStatusPanel'), limitsPanel: document.getElementById('limitsPanel'), trendsPanel: document.getElementById('trendsPanel'), viewSwitcher: document.getElementById('viewSwitcher'), pinButton: document.getElementById('pinButton'), utilityActions: document.getElementById('utilityActions'), settingsButton: document.getElementById('settingsButton'), settingsPanel: document.getElementById('settingsPanel'), languageInput: document.getElementById('languageInput'), currencyInput: document.getElementById('currencyInput'), currencyRateRow: document.getElementById('currencyRateRow'), currencyRateModeAuto: document.getElementById('currencyRateModeAuto'), currencyRateModeManual: document.getElementById('currencyRateModeManual'), currencyRateManualField: document.getElementById('currencyRateManualField'), currencyRateOverrideInput: document.getElementById('currencyRateOverrideInput'), currencyRateStatus: document.getElementById('currencyRateStatus'), hubUrlInput: document.getElementById('hubUrlInput'), secretInput: document.getElementById('secretInput'), deviceIdInput: document.getElementById('deviceIdInput'), limitProviderCheckboxes: document.getElementById('limitProviderCheckboxes'), limitsRefreshInput: document.getElementById('limitsRefreshInput'), limitsRefreshAdaptiveNote: document.getElementById('limitsRefreshAdaptiveNote'), showLimitSourceInput: document.getElementById('showLimitSourceInput'), maskLimitAccountEmailsInput: document.getElementById('maskLimitAccountEmailsInput'), showLimitUsedInputs: Array.from(document.querySelectorAll('input[name="showLimitUsed"]')), predictiveQuotaAlertsInput: document.getElementById('predictiveQuotaAlertsInput'), predictiveQuotaTrayIndicatorInput: document.getElementById('predictiveQuotaTrayIndicatorInput'), predictiveQuotaCriticalEtaInput: document.getElementById('predictiveQuotaCriticalEtaInput'), liveDotInput: document.getElementById('liveDotInput'), toolIconsInput: document.getElementById('toolIconsInput'), floatingBubbleInput: document.getElementById('floatingBubbleInput'), floatingBubbleTriggerInputs: Array.from(document.querySelectorAll('input[name="floatingBubbleTrigger"]')), floatingBubbleTriggerRow: document.getElementById('floatingBubbleTriggerRow'), floatingBubbleContentInput: document.getElementById('floatingBubbleContentInput'), floatingBubbleContentRow: document.getElementById('floatingBubbleContentRow'), floatingBubbleComposer: document.getElementById('floatingBubbleComposer'), floatingBubbleContent: document.getElementById('floatingBubbleContent'), discordRpcInput: document.getElementById('discordRpcInput'), windowBehaviorInput: document.getElementById('windowBehaviorInput'), showTrayIconInput: document.getElementById('showTrayIconInput'), showTrayProviderBadgeInput: document.getElementById('showTrayProviderBadgeInput'), trayModeInput: document.getElementById('trayModeInput'), trayContentInput: document.getElementById('trayContentInput'), trayComposer: document.getElementById('trayComposer'), windowToggleShortcutValue: document.getElementById('windowToggleShortcutValue'), windowToggleShortcutClearButton: document.getElementById('windowToggleShortcutClearButton'), windowToggleShortcutNote: document.getElementById('windowToggleShortcutNote'), glassInput: document.getElementById('glassInput'), blurInput: document.getElementById('blurInput'), zoomInput: document.getElementById('zoomInput'), resetGlassButton: document.getElementById('resetGlassButton'), resetDepthButton: document.getElementById('resetDepthButton'), resetZoomButton: document.getElementById('resetZoomButton'), saveSettingsButton: document.getElementById('saveSettingsButton'), clientDisplayList: document.getElementById('clientDisplayList'), wslScanInput: document.getElementById('wslScanInput'), wslScanRow: document.getElementById('wslScanRow'), wslPanel: document.getElementById('wslPanel'), openConfigButton: document.getElementById('openConfigButton'), exportAutoInput: document.getElementById('exportAutoInput'), exportAutoDetails: document.getElementById('exportAutoDetails'), exportAutoStatus: document.getElementById('exportAutoStatus'), exportDirLabel: document.getElementById('exportDirLabel'), exportPickDirButton: document.getElementById('exportPickDirButton'), exportIntervalInput: document.getElementById('exportIntervalInput'), exportNowButton: document.getElementById('exportNowButton'), refreshButton: document.getElementById('refreshButton'), minButton: document.getElementById('minButton'), closeButton: document.getElementById('closeButton'), floatingBubbleTab: document.getElementById('floatingBubbleTab'),
   subscriptionList: document.getElementById('subscriptionList'), subscriptionAddForm: document.getElementById('subscriptionAddForm'), subscriptionAddToggle: document.getElementById('subscriptionAddToggle'), subscriptionAddDetails: document.getElementById('subscriptionAddDetails'), subscriptionProviderInput: document.getElementById('subscriptionProviderInput'), subscriptionAccountInput: document.getElementById('subscriptionAccountInput'), subscriptionPlanNameInput: document.getElementById('subscriptionPlanNameInput'), subscriptionAmountInput: document.getElementById('subscriptionAmountInput'), subscriptionCurrencyInput: document.getElementById('subscriptionCurrencyInput'), subscriptionIntervalCountInput: document.getElementById('subscriptionIntervalCountInput'), subscriptionIntervalInput: document.getElementById('subscriptionIntervalInput'), subscriptionStartDateInput: document.getElementById('subscriptionStartDateInput'), subscriptionAutoRenewInput: document.getElementById('subscriptionAutoRenewInput'), subscriptionNextRenewalInput: document.getElementById('subscriptionNextRenewalInput'), subscriptionNote: document.getElementById('subscriptionNote'), subscriptionOrphanNotice: document.getElementById('subscriptionOrphanNotice'), subscriptionOrphanText: document.getElementById('subscriptionOrphanText'), subscriptionOrphanAdopt: document.getElementById('subscriptionOrphanAdopt'), subscriptionOrphanDiscard: document.getElementById('subscriptionOrphanDiscard'), subscriptionSyncError: document.getElementById('subscriptionSyncError'), subscriptionNextRenewalLabel: document.getElementById('subscriptionNextRenewalLabel'), subscriptionNextRenewalNote: document.getElementById('subscriptionNextRenewalNote'), subscriptionSubmit: document.getElementById('subscriptionSubmit'), subscriptionCancelEdit: document.getElementById('subscriptionCancelEdit'), subscriptionTotalRow: document.getElementById('subscriptionTotalRow'), subscriptionErrorMessage: document.getElementById('subscriptionErrorMessage'), subscriptionPlanFields: document.getElementById('subscriptionPlanFields'), subscriptionTopUpFields: document.getElementById('subscriptionTopUpFields'), subscriptionTopUpList: document.getElementById('subscriptionTopUpList'), subscriptionTopUpDateInput: document.getElementById('subscriptionTopUpDateInput'), subscriptionTopUpAmountInput: document.getElementById('subscriptionTopUpAmountInput'), subscriptionTopUpAddButton: document.getElementById('subscriptionTopUpAddButton'), subscriptionAmountRow: document.getElementById('subscriptionAmountRow'), subscriptionTopUpHeadingRow: document.getElementById('subscriptionTopUpHeadingRow'), subscriptionKindInputs: [...document.querySelectorAll('input[name="subscriptionKind"]')]
 };
 Object.assign(els, {
@@ -4186,6 +4187,10 @@ function limitWindowNode(label, window, color, tone = 1, valueOverride = null, d
   const fillPercent = limitFillPercent(remaining, used, showUsed);
   const item = document.createElement('div');
   item.className = 'limit-window';
+  // Identity stamp so the forecast layer can attach metadata to the exact
+  // window node after the provider branch finishes building (§21.1).
+  item.dataset.limitWindowKind = window?.kind || '';
+  item.dataset.limitWindowLabel = window?.label || '';
   const text = document.createElement('div');
   text.className = 'limit-window-text';
   const name = document.createElement('span');
@@ -4532,6 +4537,102 @@ function renderLimitProviderHead(id, label, provider, color, options = {}) {
   plan.textContent = options.planText ?? limitProviderPlan(provider);
   head.append(titleBlock, decoratePlanWithSubscription(plan, provider));
   return head;
+}
+
+// Predictive alert metadata for one quota window (§21.1, §21.2, §21.3).
+// Attached after the provider branch builds its window grid, so every provider
+// benefits without threading forecast data through each branch.
+
+function forecastForWindow(provider, window) {
+  const forecasts = state.quotaForecast?.forecasts || [];
+  if (forecasts.length === 0) return null;
+  const kind = String(window?.kind || '').toLowerCase();
+  const label = String(window?.label || '').trim();
+  return forecasts.find((forecast) =>
+    forecast.provider === String(provider?.provider || '').toLowerCase()
+    && (forecast.accountKey || '') === String(provider?.accountKey || '')
+    && forecast.windowKind === kind
+    && (forecast.windowLabel || '').trim() === label) || null;
+}
+
+function forecastRow(label, value, className = '') {
+  const row = document.createElement('div');
+  row.className = `limit-forecast-row ${className}`.trim();
+  const labelSpan = document.createElement('span');
+  labelSpan.className = 'limit-forecast-label';
+  labelSpan.textContent = label;
+  const valueSpan = document.createElement('span');
+  valueSpan.className = 'limit-forecast-value';
+  valueSpan.textContent = value || '—';
+  row.append(labelSpan, valueSpan);
+  return row;
+}
+
+function appendForecastBlock(item, forecast) {
+  const block = document.createElement('div');
+  block.className = 'limit-forecast';
+  const risk = forecast.risk || 'unknown';
+  const weekly = forecast.windowKind === 'weekly';
+  const unit = forecastPresentationApi.burnRateUnitForWindow(forecast.windowKind);
+  if (risk === 'warning' || risk === 'critical') {
+    const badge = document.createElement('span');
+    badge.className = `limit-forecast-badge limit-forecast-badge-${risk}`;
+    badge.textContent = t(forecastPresentationApi.riskLabelKey(risk));
+    block.append(badge);
+  }
+  if (forecast.riskReason === 'stale') {
+    const age = forecastPresentationApi.formatDurationMs(forecast.lastForecastAgeMs);
+    block.append(forecastRow(t('limits.forecast.lastForecast'), age ? `${t('limits.forecast.lastForecastAgo')} ${age}` : t('limits.forecast.lastForecastUnknown')));
+  } else if (forecast.confidence === 'insufficient' && forecast.risk === 'unknown') {
+    // §21.3: never show SAFE before enough samples exist.
+    block.append(forecastRow(t('limits.forecast.collecting'), t('limits.forecast.collectingTrend')));
+  }
+  if (forecast.primaryRate !== null && forecast.primaryRate > 0) {
+    if (weekly) {
+      block.append(forecastRow(t('limits.forecast.burn24h'), forecastPresentationApi.formatBurnRate(forecast.rate24h, { unit })));
+      if (forecast.rate1h !== null) {
+        block.append(forecastRow(t('limits.forecast.currentBurst'), forecastPresentationApi.formatBurnRate(forecast.rate1h)));
+      }
+    } else {
+      if (forecast.rate15m !== null) {
+        block.append(forecastRow(t('limits.forecast.burn15m'), forecastPresentationApi.formatBurnRate(forecast.rate15m)));
+      }
+      block.append(forecastRow(t('limits.forecast.burn1h'), forecastPresentationApi.formatBurnRate(forecast.rate1h, { unit })));
+    }
+  }
+  if (forecast.estimatedExhaustionAt) {
+    const etaText = weekly
+      ? `~${forecastPresentationApi.formatDurationMs(forecast.timeToExhaustionMs)}`
+      : forecastPresentationApi.formatEtaClock(forecast.estimatedExhaustionAt);
+    block.append(forecastRow(t('limits.forecast.estimatedEmpty'), etaText));
+  }
+  if (forecast.exhaustionBeforeResetMs !== null && forecast.exhaustionBeforeResetMs > 0) {
+    const margin = forecastPresentationApi.formatDurationMs(forecast.exhaustionBeforeResetMs);
+    const warning = document.createElement('div');
+    warning.className = 'limit-forecast-warning';
+    warning.textContent = `⚠ ${t('limits.forecast.beforeReset', { duration: margin })}`;
+    block.append(warning);
+  } else if (risk === 'critical' && forecast.riskReason === 'nearly-empty') {
+    const warning = document.createElement('div');
+    warning.className = 'limit-forecast-warning';
+    warning.textContent = `⚠ ${t('limits.forecast.nearlyEmpty')}`;
+    block.append(warning);
+  } else if (risk === 'safe' && forecast.estimatedExhaustionAt && forecast.riskReason === 'survives-reset') {
+    block.append(forecastRow(t('limits.forecast.survivesReset'), ''));
+  }
+  if (block.childNodes.length > 0) item.append(block);
+}
+
+function attachForecastBlocks(windows, provider) {
+  if (state.settings?.predictiveQuotaAlertsEnabled === false) return;
+  if (!state.quotaForecast?.forecasts?.length) return;
+  for (const child of windows?.children || []) {
+    const kind = child.dataset?.limitWindowKind;
+    if (!kind) continue;
+    const label = child.dataset?.limitWindowLabel || '';
+    const forecast = forecastForWindow(provider, { kind, label });
+    if (forecast) appendForecastBlock(child, forecast);
+  }
 }
 
 function renderProviderWindows(provider, color) {
@@ -4951,6 +5052,7 @@ function renderProviderWindows(provider, color) {
     if (session) windows.append(limitWindowNode(session.label || 'Session', session, color, 0.95));
     if (weekly) windows.append(limitWindowNode(weekly.label || 'Weekly', weekly, color, 0.68));
   }
+  attachForecastBlocks(windows, provider);
   return windows;
 }
 
@@ -5225,7 +5327,15 @@ function renderLimits() {
       state.codexSystemSwitchError || ''
     ],
     providerOrder: orderedProviders.map(({ id }) => id),
-    providers: [...visibleProviderEntries.entries()]
+    providers: [...visibleProviderEntries.entries()],
+    forecast: (state.quotaForecast?.forecasts || []).map((forecast) => [
+      forecast.seriesKey,
+      forecast.risk,
+      forecast.riskReason,
+      forecast.primaryRate,
+      forecast.estimatedExhaustionAt,
+      forecast.confidence
+    ])
   });
   if (
     state.limitPanelRenderSignature === renderSignature
@@ -7200,6 +7310,13 @@ async function refreshStats(options = {}) {
   }
   try {
     state.stats = overlayAllTimeSessions(await window.tokenMonitor.getStats(options));
+    void window.tokenMonitor.getQuotaForecast?.().then((forecast) => {
+      if (forecast) {
+        state.quotaForecast = forecast;
+        refreshRiskTrayIcons();
+        statsRenderScheduler.request();
+      }
+    }).catch(() => {});
     if (options.forceHistory === true) {
       // A manual history rescan is an explicit retry boundary. Let Home request the
       // corresponding full payload even when its revision is unchanged, and restore
@@ -8343,6 +8460,11 @@ function syncSettingsForm() {
   }
   els.showLimitSourceInput.checked = Boolean(state.settings.showLimitSource);
   els.maskLimitAccountEmailsInput.checked = Boolean(state.settings.maskLimitAccountEmails);
+  if (els.predictiveQuotaAlertsInput) els.predictiveQuotaAlertsInput.checked = state.settings.predictiveQuotaAlertsEnabled !== false;
+  if (els.predictiveQuotaTrayIndicatorInput) els.predictiveQuotaTrayIndicatorInput.checked = state.settings.predictiveQuotaTrayIndicator !== false;
+  if (els.predictiveQuotaCriticalEtaInput) {
+    els.predictiveQuotaCriticalEtaInput.value = String(Number(state.settings.predictiveQuotaCriticalEtaMinutes) || 60);
+  }
   renderSubscriptionSettings();
   const showLimitUsed = state.settings.showLimitUsed ? 'used' : 'remaining';
   for (const input of els.showLimitUsedInputs || []) input.checked = input.value === showLimitUsed;
@@ -11072,6 +11194,23 @@ els.maskLimitAccountEmailsInput.addEventListener('change', async () => {
   await saveSettings({ maskLimitAccountEmails: els.maskLimitAccountEmailsInput.checked });
   renderLimits();
 });
+els.predictiveQuotaAlertsInput?.addEventListener('change', async () => {
+  await saveSettings({ predictiveQuotaAlertsEnabled: els.predictiveQuotaAlertsInput.checked });
+  renderLimits();
+  void refreshRiskTrayIcons();
+});
+els.predictiveQuotaTrayIndicatorInput?.addEventListener('change', async () => {
+  await saveSettings({ predictiveQuotaTrayIndicator: els.predictiveQuotaTrayIndicatorInput.checked });
+  void refreshRiskTrayIcons();
+});
+els.predictiveQuotaCriticalEtaInput?.addEventListener('change', async () => {
+  const minutes = Number(els.predictiveQuotaCriticalEtaInput.value);
+  if (!Number.isFinite(minutes) || minutes < 5) {
+    els.predictiveQuotaCriticalEtaInput.value = String(Number(state.settings.predictiveQuotaCriticalEtaMinutes) || 60);
+    return;
+  }
+  await saveSettings({ predictiveQuotaCriticalEtaMinutes: minutes });
+});
 els.subscriptionAddToggle?.addEventListener('click', () => {
   const opening = els.subscriptionAddDetails?.classList.contains('hidden');
   if (opening) {
@@ -11475,6 +11614,7 @@ window.tokenMonitor.onSettingsPush?.((next) => {
   applyEffectiveCurrencyRates();
   preserveSettingsPanelScroll(syncSettingsForm);
   maybeUpdateBarsIcon();
+  void refreshRiskTrayIcons();
   if ((prevMetric || 'cost') !== (next.heatmapMetric || 'cost')) {
     render();
   } else if (
@@ -11571,6 +11711,10 @@ window.tokenMonitor.onStatsPush?.((payload) => {
     }
     if (payload.data?.mode) state.mode = payload.data.mode;
     state.stats = overlayAllTimeSessions(payload.data.stats);
+    if (payload.data.quotaForecast) {
+      state.quotaForecast = payload.data.quotaForecast;
+      refreshRiskTrayIcons();
+    }
     applyCodexActiveAccountFromStats();
     // Progressive mid-tick pushes never carry a fresh history scan (see
     // AGENTS.md collector notes), so only the final push can retire the
@@ -12734,6 +12878,64 @@ function providerImageToPngDataUrl(img, size, showBadge = false, options = {}) {
   return canvas.toDataURL('image/png');
 }
 
+// Risk overlay icons (§19): the app icon plus an explicit yellow/red badge,
+// shipped through the same tray:setIcons channel as the provider icons. The
+// main process swaps them in while a warning/critical forecast is active, on
+// every platform (macOS risk icons stay non-template so the badge survives the
+// system tint — main.js skips template marking for risk-* ids).
+function riskIconDataUrl(img, risk) {
+  const size = 44;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  drawProviderImage(ctx, img, 0, 0, size, false, '');
+  const color = forecastPresentationApi.riskBadgeColor(risk) || '#e5484d';
+  const radius = Math.round(size * 0.22);
+  const margin = Math.round(size * 0.055);
+  const cx = size - margin - radius;
+  const cy = size - margin - radius;
+  ctx.save();
+  // A light halo keeps the badge legible on dark tray bars and light themes.
+  ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
+  ctx.shadowBlur = Math.max(2, Math.round(size * 0.09));
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#ffffff';
+  ctx.stroke();
+  ctx.restore();
+  return canvas.toDataURL('image/png');
+}
+
+async function refreshRiskTrayIcons() {
+  if (!window.tokenMonitor.setTrayIcons) return;
+  const enabled = state.settings?.predictiveQuotaAlertsEnabled !== false
+    && state.settings?.predictiveQuotaTrayIndicator !== false;
+  const risk = state.quotaForecast?.globalRisk?.risk;
+  if (!enabled || (risk !== 'warning' && risk !== 'critical')) {
+    // Clear stale risk icons so a previous alarm cannot pin the tray.
+    await window.tokenMonitor.setTrayIcons({ 'risk-warning': null, 'risk-critical': null });
+    return;
+  }
+  let image = trayProviderImages.app;
+  if (!image) {
+    try {
+      image = await loadImage('../../../assets/icons/tray-token-monitor.png');
+      trayProviderImages.app = image;
+      trayProviderImageIds.set(image, 'app');
+    } catch (_) {
+      return; // provider icon delivery will retry; the tray stays on the base icon
+    }
+  }
+  const icons = { [`risk-${risk}`]: riskIconDataUrl(image, risk) };
+  if (risk === 'warning') icons['risk-critical'] = null;
+  else icons['risk-warning'] = null;
+  await window.tokenMonitor.setTrayIcons(icons);
+}
+
 async function deliverTrayProviderIcons(showBadge = state.settings?.showTrayProviderBadge === true) {
   if (!window.tokenMonitor.setTrayIcons) return;
   const deliveryId = trayProviderIconDeliveryGuard.begin();
@@ -12753,6 +12955,7 @@ async function deliverTrayProviderIcons(showBadge = state.settings?.showTrayProv
   if (!trayProviderIconDeliveryGuard.isCurrent(deliveryId)) return;
   // Provider images may unlock a richer bars icon now that they're cached.
   maybeUpdateBarsIcon();
+  void refreshRiskTrayIcons();
 }
 
 function setAccountGroupExpanded(prefix, expanded, stateKey) {
