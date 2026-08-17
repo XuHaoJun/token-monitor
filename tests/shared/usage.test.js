@@ -9,6 +9,7 @@ const {
   extractUsageFromTokscale,
   mergeDeviceRecord,
   mergePeriods,
+  normalizeClientName,
   UNATTRIBUTED_USAGE_CLIENT
 } = require('../../src/shared/usage');
 
@@ -813,6 +814,14 @@ test('extractUsageFromTokscale normalizes CodeBuddy and WorkBuddy client ids', (
   assert.equal(period.clients.workbuddy, 12);
 });
 
+test('extractUsageFromTokscale keeps the canonical Command Code client id', () => {
+  const period = extractUsageFromTokscale([
+    { client: 'Command Code', model: 'deepseek/deepseek-v4-flash', totalTokens: 19 }
+  ]);
+
+  assert.equal(period.clients.commandcode, 19);
+});
+
 test('normalizeClientName keeps kilo distinct from kilocode and maps Oh My Pi to pi', () => {
   const period = extractUsageFromTokscale([
     { client: 'kilo', model: 'x', totalTokens: 5 },
@@ -822,6 +831,12 @@ test('normalizeClientName keeps kilo distinct from kilocode and maps Oh My Pi to
   assert.equal(period.clients.kilo, 5);
   assert.equal(period.clients.pi, 7);
   assert.ok(!('kilocode' in period.clients));
+});
+
+test('normalizeClientName keeps Qoder CN distinct from international Qoder', () => {
+  assert.equal(normalizeClientName('Qoder CN'), 'qodercn');
+  assert.equal(normalizeClientName('qoder-cn'), 'qodercn');
+  assert.equal(normalizeClientName('Qoder'), 'qoder');
 });
 
 test('extractUsageFromTokscale keeps model usage grouped by client', () => {

@@ -36,7 +36,7 @@ test('renderer client labels cover every known client', () => {
 
 test('renderer known clients include current tokscale-supported tools', () => {
   const clients = knownClientIds(rendererSource());
-  for (const client of ['cline', 'kimi', 'qwen', 'grok', 'copilot', 'pi', 'zed', 'kilocode', 'micode', 'zcode', 'kiro', 'codebuddy', 'workbuddy', 'reasonix']) {
+  for (const client of ['cline', 'kimi', 'qwen', 'grok', 'copilot', 'pi', 'zed', 'kilocode', 'commandcode', 'micode', 'zcode', 'kiro', 'codebuddy', 'workbuddy', 'reasonix']) {
     assert.ok(clients.includes(client), `${client} should be a known renderer client`);
   }
 });
@@ -106,6 +106,20 @@ test('renderer uses the CodeBuddy and WorkBuddy brand icons for their tool rows'
 test('renderer uses the Reasonix icon for the Reasonix tool row', () => {
   const styles = rendererStyles();
   assert.match(styles, /\.row-icon-reasonix\s*\{[^}]*assets\/icons\/reasonix\.svg/s);
+});
+
+test('renderer uses the mask-safe Command Code icon for its tool row', () => {
+  const source = rendererSource();
+  const styles = rendererStyles();
+  const icon = fs.readFileSync(path.join(__dirname, '..', '..', 'assets', 'icons', 'commandcode.svg'), 'utf8');
+
+  assert.match(source, /clientsWithIcon = new Set\([\s\S]*'commandcode'/);
+  assert.match(styles, /\.row-icon-commandcode\s*\{[^}]*assets\/icons\/commandcode\.svg/s);
+  // Cropped to the glyph: the outer rounded-square frame was dropped so the
+  // mark fills the icon box like every other tool row.
+  assert.match(icon, /viewBox="26\.1784 26\.1784 83\.7708 83\.7708"/);
+  assert.doesNotMatch(icon, /fill="#(?:000|fff)"/i);
+  assert.equal((icon.match(/<path\b/g) || []).length, 1);
 });
 
 test('Reasonix icon keeps the official color in a mask-safe SVG path', () => {
